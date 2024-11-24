@@ -1,5 +1,5 @@
 # Install the necessary libraries
-#pip install transformers diffusers gradio pillow
+!pip install transformers diffusers gradio pillow
 
 import torch
 from diffusers import StableDiffusionPipeline
@@ -13,27 +13,27 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # Load the Stable Diffusion model and configure it to run on the appropriate device
 text_to_image_model = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4").to(device)
 
-# Create the directory for generated images if it doesn't exist
-output_dir = "Generated Images"
-os.makedirs(output_dir, exist_ok=True)
-
-# Create a history directory to store prompts and images
-history_dir = "History"
+# Create the main history directory
+history_dir = "/content/History"
 os.makedirs(history_dir, exist_ok=True)
 
-# Function to generate and save an image from text
-def generate_and_save_image(prompt, index):
-    # Create directories for history
-    prompt_dir = os.path.join(history_dir, f"the_prompt_{index}")
-    image_dir = os.path.join(history_dir, f"the_image_{index}")
-    os.makedirs(prompt_dir, exist_ok=True)
+# Function to generate and save an image and prompt from text
+def generate_and_save_image(prompt):
+    # Calculate the index based on the number of existing directories in Generated_Images
+    index = len([name for name in os.listdir(history_dir) if name.startswith("Generated_Images")]) + 1
+
+    # Create a new directory for this prompt and image
+    image_dir = os.path.join(history_dir, f"Generated_Images{index}")
     os.makedirs(image_dir, exist_ok=True)
 
+    # Define file paths for saving the image and prompt (without index in file names)
+    image_file_path = os.path.join(image_dir, "generated_image.png")
+    prompt_file_path = os.path.join(image_dir, "prompt.txt")
+
     # Save the prompt to a text file
-    with open(os.path.join(prompt_dir, "prompt.txt"), "w") as f:
+    with open(prompt_file_path, "w") as f:
         f.write(prompt)
 
-    file_path = os.path.join(image_dir, "generated_image.png")  # Define the file path for saving the image
     # Generate the image from the prompt
     images = text_to_image_model(prompt).images
 
@@ -41,15 +41,14 @@ def generate_and_save_image(prompt, index):
     images[0].show()
 
     # Save the image to the specified file path
-    images[0].save(file_path)
+    images[0].save(image_file_path)
 
-    return file_path
+    return image_file_path
 
 # Function to handle image generation
 def handle_generation(prompt):
-    # Get the index for the prompt/image directories
-    index = len(os.listdir(history_dir)) + 1  # Calculate index based on existing directories
-    file_path = generate_and_save_image(prompt, index)
+    # Generate and save the image and prompt
+    file_path = generate_and_save_image(prompt)
 
     # Load the saved image
     image = Image.open(file_path)
@@ -58,10 +57,10 @@ def handle_generation(prompt):
 
 # Gradio UI setup
 with gr.Blocks() as demo:
-    gr.Markdown("# Generate Image from Text")
+    gr.Markdown("# Generate Image from Text (it works better without living things like people, dogs, etc.)")
 
     # Input field for the user to describe the image they want to generate
-    prompt = gr.Textbox(label="Describe the image you want to generate")
+    prompt = gr.Textbox(label="Describe the image you want to generate (Write in English please)")
 
     # Submit button for image generation
     submit_btn = gr.Button("Submit")
