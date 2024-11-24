@@ -1,5 +1,4 @@
-# Install the necessary libraries
-!pip install transformers diffusers gradio pillow
+
 
 import torch
 from diffusers import StableDiffusionPipeline
