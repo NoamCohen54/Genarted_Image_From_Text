@@ -1,5 +1,3 @@
-
-
 import torch
 from diffusers import StableDiffusionPipeline
 import gradio as gr
